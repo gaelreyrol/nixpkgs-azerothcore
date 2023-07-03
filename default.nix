@@ -2,7 +2,7 @@
 , stdenv
 , fetchFromGitHub
 , cmake
-, mariadb_106
+, mysql80
 , git
 , boost
 , openssl
@@ -24,7 +24,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   nativeBuildInputs = [
     cmake
-    mariadb_106
+    mysql80
     git
     boost
     openssl
