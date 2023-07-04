@@ -26,6 +26,8 @@
       azerothcore-wotlk = prev.callPackage ./default.nix { };
     };
 
+    nixosModules.default = import ./nixos;
+
     devShells = forSystems ({ pkgs, system }: {
       default = pkgs.mkShell {
         packages = [ pkgs.cachix pkgs.jq ];
