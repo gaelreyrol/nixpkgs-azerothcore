@@ -25,5 +25,11 @@
     overlays.default = final: prev: {
       azerothcore-wotlk = prev.callPackage ./default.nix { };
     };
+
+    devShells = forSystems ({ pkgs, system }: {
+      default = pkgs.mkShell {
+        packages = [ pkgs.cachix ];
+      };
+    });
   };
 }

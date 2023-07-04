@@ -1,0 +1,3 @@
+#! /usr/bin/env bash
+
+export CACHIX_AUTH_TOKEN=""
