@@ -13,7 +13,7 @@
 }:
 
 stdenv.mkDerivation (finalAttrs: {
-  pname = "azerothcore-wotlk";
+  pname = "server-wotlk";
   version = "unstable-2023-07";
 
   src = fetchFromGitHub {

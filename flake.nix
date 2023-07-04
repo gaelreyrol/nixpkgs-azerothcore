@@ -17,13 +17,10 @@
           }
         );
   in {
-    packages = forSystems ({ pkgs, system }: {
-      default = self.packages.${system}.azerothcore-wotlk;
-      azerothcore-wotlk = pkgs.callPackage ./default.nix { };
-    });
+    packages = forSystems ({ pkgs, system }: import ./packages { inherit pkgs; });
 
     overlays.default = final: prev: {
-      azerothcore-wotlk = prev.callPackage ./default.nix { };
+      azerothcore = prev.callPackage ./packages { };
     };
 
     nixosModules.default = import ./nixos;

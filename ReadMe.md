@@ -49,7 +49,8 @@ In your `flake.nix`:
 
           # install the main package
           environment.systemPackages = [
-            pkgs.azerothcore-wotlk
+            pkgs.azerothcore.server-wotlk
+            pkgs.azerothcore.client-data-wotlk
           ];
         };
       })];
