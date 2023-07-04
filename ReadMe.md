@@ -4,7 +4,7 @@
 
 Automated, pre-built packages for AzerothCore for NixOS. 
 
-> > **Note**
+> **Note**
 > This repository is mostly for fun, to learn Nix packaging and distribution.
 
 > **Warning**
