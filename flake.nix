@@ -28,7 +28,7 @@
 
     devShells = forSystems ({ pkgs, system }: {
       default = pkgs.mkShell {
-        packages = [ pkgs.cachix ];
+        packages = [ pkgs.cachix pkgs.jq ];
       };
     });
   };
