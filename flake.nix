@@ -19,7 +19,12 @@
         );
   in {
     packages = forSystems ({ pkgs, system }: {
-      default = pkgs.callPackage ./default.nix { };
+      default = self.packages.${system}.azerothcore-wotlk;
+      azerothcore-wotlk = pkgs.callPackage ./default.nix { };
     });
+
+    overlays.default = final: prev: {
+      azerothcore-wotlk = prev.callPackage ./default.nix { };
+    };
   };
 }
