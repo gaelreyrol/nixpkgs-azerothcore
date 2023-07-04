@@ -2,11 +2,14 @@
 
 [![.github/workflows/ci.yml](https://github.com/gaelreyrol/nixpkgs-azerothcore/actions/workflows/ci.yml/badge.svg)](https://github.com/gaelreyrol/nixpkgs-azerothcore/actions/workflows/ci.yml)
 
->  Automated, pre-built packages for AzerothCore for NixOS. 
+Automated, pre-built packages for AzerothCore for NixOS. 
 
-This repository is mostly for fun, to learn Nix packaging and distribution.
+> > **Note**
+> This repository is mostly for fun, to learn Nix packaging and distribution.
 
+> **Warning**
 > Flake feature is the only supported usage method.
+> Linux x86_64 is the only supported platform.
 
 ## Flake Usage
 

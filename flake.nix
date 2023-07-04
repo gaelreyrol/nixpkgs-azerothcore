@@ -7,7 +7,6 @@
     forSystems = function:
       nixpkgs.lib.genAttrs [
         "x86_64-linux"
-        "x86_64-darwin"
       ]
         (system:
           function {
