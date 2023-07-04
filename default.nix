@@ -2,6 +2,7 @@
 , stdenv
 , fetchFromGitHub
 , cmake
+, pkg-config
 , mysql80
 , git
 , boost
@@ -24,6 +25,10 @@ stdenv.mkDerivation (finalAttrs: {
 
   nativeBuildInputs = [
     cmake
+    pkg-config
+  ];
+
+  buildInputs = [
     mysql80
     git
     boost
@@ -33,7 +38,16 @@ stdenv.mkDerivation (finalAttrs: {
     bzip2
   ];
 
-  cmakeFlags = [ "-DCMAKE_INSTALL_PREFIX=$out" "-DTOOLS_BUILD=all" "-DSCRIPTS=static" "-DMODULES=static" ];
+  enableParallelBuilding = true;  
+
+  cmakeFlags = [
+    "-DCMAKE_INSTALL_PREFIX=${placeholder "out"}"
+    "-DTOOLS_BUILD=all"
+    "-DSCRIPTS=static"
+    "-DMODULES=static"
+  ];
+
+  cmakeBuildType = "Release";
 
   meta = with lib; {
     description = "Complete Open Source and Modular solution for MMO";

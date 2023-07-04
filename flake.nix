@@ -4,9 +4,22 @@
   };
   outputs = { self, nixpkgs }: 
   let
-    system = "x86_64-linux";
-    pkgs = import nixpkgs { inherit system; };
+    forSystems = function:
+      nixpkgs.lib.genAttrs [
+        "x86_64-linux"
+        "x86_64-darwin"
+      ]
+        (system:
+          function {
+            inherit system;
+            pkgs = import nixpkgs {
+              inherit system;
+            };
+          }
+        );
   in {
-    packages.${system}.default = pkgs.callPackage ./default.nix { };
+    packages = forSystems ({ pkgs, system }: {
+      default = pkgs.callPackage ./default.nix { };
+    });
   };
 }
