@@ -17,10 +17,10 @@
           }
         );
   in {
-    packages = forSystems ({ pkgs, system }: import ./packages { inherit pkgs; });
+    packages = forSystems ({ pkgs, system }: import ./pkgs { inherit pkgs; });
 
     overlays.default = final: prev: {
-      azerothcore = prev.callPackage ./packages { };
+      azerothcore = prev.callPackage ./pkgs { };
     };
 
     nixosModules.default = import ./nixos;
