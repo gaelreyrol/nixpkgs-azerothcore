@@ -13,6 +13,7 @@
             inherit system;
             pkgs = import nixpkgs {
               inherit system;
+              config.allowUnfree = true;
             };
           }
         );
