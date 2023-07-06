@@ -18,18 +18,41 @@
           }
         );
   in {
-    packages = forSystems ({ pkgs, system }: import ./pkgs { inherit pkgs; });
+    packages = forSystems ({ pkgs, system }: import ./pkgs { inherit pkgs; } // {
+      nixos = import ./nixos/tests {
+        inherit system;
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+          overlays = [ self.overlays.default ];
+        };
+      };
+    });
 
     overlays.default = final: prev: {
       azerothcore = prev.callPackage ./pkgs { };
     };
 
-    nixosModules.default = import ./nixos;
+    nixosModules = {
+      azerothcore = import ./nixos;
+      default = self.nixosModules.azerothcore;
+    };
 
     devShells = forSystems ({ pkgs, system }: {
       default = pkgs.mkShell {
         packages = [ pkgs.cachix pkgs.jq ];
       };
     });
+
+    # checks = forSystems ({ pkgs, system }: {
+    #   nixos = import ./nixos/tests {
+    #     inherit system;
+    #     pkgs = import nixpkgs {
+    #       inherit system;
+    #       config.allowUnfree = true;
+    #       overlays = [ self.overlays.default ];
+    #     };
+    #   }; 
+    # });
   };
 }
