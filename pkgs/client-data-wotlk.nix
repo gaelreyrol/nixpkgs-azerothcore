@@ -20,7 +20,7 @@ stdenv.mkDerivation (finalAttrs: {
   dontConfigure = true;
   dontBuild = true;
   dontFixup = true;
-  
+
   unpackPhase = ''
     unzip ${finalAttrs.src}
   '';

@@ -38,7 +38,7 @@ stdenv.mkDerivation (finalAttrs: {
     bzip2
   ];
 
-  enableParallelBuilding = true;  
+  enableParallelBuilding = true;
 
   cmakeFlags = [
     "-DCMAKE_INSTALL_PREFIX=${placeholder "out"}"

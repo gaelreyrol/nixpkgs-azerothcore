@@ -4,7 +4,8 @@ with lib;
 
 let
   cfg = config.services.azerothcore;
-in {
+in
+{
   options.services.azerothcore = {
     enable = mkEnableOption "AzerothCore service";
 
@@ -24,7 +25,7 @@ in {
       default = pkgs.azerothcore.client-data-wotlk;
       description = mdDoc "The AzerothCore Client Data package to use";
     };
-    
+
     dataDir = mkOption {
       type = types.path;
       default = "/var/lib/azerothcore";
@@ -141,59 +142,64 @@ in {
     };
     users.groups.azerothcore.name = "azerothcore";
 
-    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [ 
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [
       cfg.auth.port
       cfg.world.port
     ];
 
-    environment.etc = let
-      mysqlSocket = "/run/mysqld/mysqld.sock";
-      databaseInfo = (user: database: ".;${mysqlSocket};${user};;${database}") cfg.database.user;
-      authDatabaseInfo = databaseInfo cfg.auth.database;
-    in {
-      "azerothcore/authserver.conf".source = pkgs.runCommand "authserver.conf" {
-        preferLocalBuild = true;
-        buildInputs = [ pkgs.makeWrapper ];
-      } ''
-        cp ${cfg.serverPackage}/etc/authserver.conf.dist $out
-        substituteInPlace $out \
-          --replace 'LogsDir = ""' 'LogsDir = "${cfg.logDir}"' \
-          --replace 'RealmServerPort = 3724' 'RealmServerPort = "${toString cfg.auth.port}"' \
-          --replace 'BindIP = "0.0.0.0"' 'BindIP = "${cfg.auth.address}"' \
-          --replace 'TempDir = ""' 'TempDir = "${cfg.tmpDir}"' \
-          --replace \
-            'LoginDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_auth"' \
-            'LoginDatabaseInfo = "${authDatabaseInfo}"'
+    environment.etc =
+      let
+        mysqlSocket = "/run/mysqld/mysqld.sock";
+        databaseInfo = (user: database: ".;${mysqlSocket};${user};;${database}") cfg.database.user;
+        authDatabaseInfo = databaseInfo cfg.auth.database;
+      in
+      {
+        "azerothcore/authserver.conf".source = pkgs.runCommand "authserver.conf"
+          {
+            preferLocalBuild = true;
+            buildInputs = [ pkgs.makeWrapper ];
+          } ''
+          cp ${cfg.serverPackage}/etc/authserver.conf.dist $out
+          substituteInPlace $out \
+            --replace 'LogsDir = ""' 'LogsDir = "${cfg.logDir}"' \
+            --replace 'RealmServerPort = 3724' 'RealmServerPort = "${toString cfg.auth.port}"' \
+            --replace 'BindIP = "0.0.0.0"' 'BindIP = "${cfg.auth.address}"' \
+            --replace 'TempDir = ""' 'TempDir = "${cfg.tmpDir}"' \
+            --replace \
+              'LoginDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_auth"' \
+              'LoginDatabaseInfo = "${authDatabaseInfo}"'
 
-      '';
-      "azerothcore/worldserver.conf".source = pkgs.runCommand "worldserver.conf" {
-        preferLocalBuild = true;
-        buildInputs = [ pkgs.makeWrapper ];
-      } ''
-        cp ${cfg.serverPackage}/etc/worldserver.conf.dist $out
-        substituteInPlace $out \
-          --replace 'DataDir = "."' 'LogsDir = "${cfg.world.dataDir}"' \
-          --replace 'LogsDir = ""' 'LogsDir = "${cfg.logDir}"' \
-          --replace 'TempDir = ""' 'TempDir = "${cfg.tmpDir}"' \
-          --replace \
-            'LoginDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_auth"' \
-            'LoginDatabaseInfo = "${authDatabaseInfo}"' \
-          --replace \
-            'WorldDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_world"' \
-            'WorldDatabaseInfo = "${databaseInfo cfg.world.database}"' \
-          --replace \
-            'CharacterDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_characters"' \
-            'CharacterDatabaseInfo = "${databaseInfo cfg.world.charactersDatabase}"' \
-          --replace 'WorldServerPort = 8085' 'WorldServerPort = "${toString cfg.world.port}"' \
-          --replace 'BindIP = "0.0.0.0"' 'BindIP = "${cfg.world.address}"'
-      '';
-      "azerothcore/dbimport.conf".source = pkgs.runCommand "dbimport.conf" {
-        preferLocalBuild = true;
-        buildInputs = [ pkgs.makeWrapper ];
-      } ''
-        cp ${cfg.serverPackage}/etc/dbimport.conf.dist $out
-      '';
-    };
+        '';
+        "azerothcore/worldserver.conf".source = pkgs.runCommand "worldserver.conf"
+          {
+            preferLocalBuild = true;
+            buildInputs = [ pkgs.makeWrapper ];
+          } ''
+          cp ${cfg.serverPackage}/etc/worldserver.conf.dist $out
+          substituteInPlace $out \
+            --replace 'DataDir = "."' 'LogsDir = "${cfg.world.dataDir}"' \
+            --replace 'LogsDir = ""' 'LogsDir = "${cfg.logDir}"' \
+            --replace 'TempDir = ""' 'TempDir = "${cfg.tmpDir}"' \
+            --replace \
+              'LoginDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_auth"' \
+              'LoginDatabaseInfo = "${authDatabaseInfo}"' \
+            --replace \
+              'WorldDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_world"' \
+              'WorldDatabaseInfo = "${databaseInfo cfg.world.database}"' \
+            --replace \
+              'CharacterDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_characters"' \
+              'CharacterDatabaseInfo = "${databaseInfo cfg.world.charactersDatabase}"' \
+            --replace 'WorldServerPort = 8085' 'WorldServerPort = "${toString cfg.world.port}"' \
+            --replace 'BindIP = "0.0.0.0"' 'BindIP = "${cfg.world.address}"'
+        '';
+        "azerothcore/dbimport.conf".source = pkgs.runCommand "dbimport.conf"
+          {
+            preferLocalBuild = true;
+            buildInputs = [ pkgs.makeWrapper ];
+          } ''
+          cp ${cfg.serverPackage}/etc/dbimport.conf.dist $out
+        '';
+      };
 
     # systemd.services.azerothcore-auth = {
     #   description = "AzerothCore Auth Server";
