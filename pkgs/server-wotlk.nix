@@ -51,6 +51,18 @@ ccacheStdenv.mkDerivation (finalAttrs: {
 
   cmakeBuildType = "Release";
 
+  installPhase = ''
+    runHook preInstall
+
+    ls -la
+    
+    mkdir -p $out/share/sql
+    cp -r ../data/sql $out/share/sql
+    make install
+
+    runHook postInstall
+  '';
+
   meta = with lib; {
     description = "Complete Open Source and Modular solution for MMO";
     homepage = "http://www.azerothcore.org/";
