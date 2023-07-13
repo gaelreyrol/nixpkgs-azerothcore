@@ -1,5 +1,5 @@
 { lib
-, stdenv
+, ccacheStdenv
 , fetchFromGitHub
 , cmake
 , pkg-config
@@ -10,9 +10,10 @@
 , zlib
 , readline
 , bzip2
+, breakpointHook
 }:
 
-stdenv.mkDerivation (finalAttrs: {
+ccacheStdenv.mkDerivation (finalAttrs: {
   pname = "server-wotlk";
   version = "unstable-2023-07";
 
@@ -26,6 +27,7 @@ stdenv.mkDerivation (finalAttrs: {
   nativeBuildInputs = [
     cmake
     pkg-config
+    breakpointHook
   ];
 
   buildInputs = [
