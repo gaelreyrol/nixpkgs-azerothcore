@@ -53,7 +53,6 @@ in
         options = {
           user = mkOption {
             type = types.str;
-            default = "azerothcore";
             description = mdDoc "The MySQL database user to use for auth & world servers.";
           };
         };
@@ -69,17 +68,14 @@ in
         options = {
           port = mkOption {
             type = types.port;
-            default = 3724;
             description = lib.mdDoc "Port to listen on for the auth server.";
           };
           address = mkOption {
             type = types.str;
-            default = "0.0.0.0";
             description = mdDoc "Address to listen on for the auth server.";
           };
           database = mkOption {
             type = types.str;
-            default = "azerothcore-auth";
             description = "Database name for the auth server.";
           };
         };
@@ -87,7 +83,7 @@ in
       default = {
         port = 3724;
         address = "0.0.0.0";
-        database = "azerothcore-auth";
+        database = "azerothcore_auth";
       };
       description = mdDoc "Auth server configuration.";
     };
@@ -97,27 +93,18 @@ in
         options = {
           port = mkOption {
             type = types.port;
-            default = 8085;
             description = lib.mdDoc "Port to listen on for the worl server.";
           };
           address = mkOption {
             type = types.str;
-            default = "0.0.0.0";
             description = mdDoc "Address to listen on for the world server.";
-          };
-          dataDir = mkOption {
-            type = types.path;
-            default = "/var/lib/azerothcore/data";
-            description = mdDoc "Path to the client data files";
           };
           database = mkOption {
             type = types.str;
-            default = "azerothcore-world";
             description = "Database name for the world server.";
           };
           charactersDatabase = mkOption {
             type = types.str;
-            default = "azerothcore-characters";
             description = "Characters database name for the world server.";
           };
         };
@@ -125,9 +112,8 @@ in
       default = {
         port = 8085;
         address = "0.0.0.0";
-        dataDir = "/var/lib/azerothcore/data";
-        database = "azerothcore-world";
-        charactersDatabase = "azerothcore-characters";
+        database = "azerothcore_world";
+        charactersDatabase = "azerothcore_characters";
       };
       description = mdDoc "World server configuration.";
     };
@@ -162,8 +148,9 @@ in
           cp ${cfg.serverPackage}/etc/authserver.conf.dist $out
           substituteInPlace $out \
             --replace 'LogsDir = ""' 'LogsDir = "${cfg.logDir}"' \
-            --replace 'RealmServerPort = 3724' 'RealmServerPort = "${toString cfg.auth.port}"' \
+            --replace 'RealmServerPort = 3724' 'RealmServerPort = ${toString cfg.auth.port}' \
             --replace 'BindIP = "0.0.0.0"' 'BindIP = "${cfg.auth.address}"' \
+            --replace 'SourceDirectory = ""' 'SourceDirectory = "${cfg.dataDir}/sql"' \
             --replace 'TempDir = ""' 'TempDir = "${cfg.tmpDir}"' \
             --replace \
               'LoginDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_auth"' \
@@ -177,19 +164,19 @@ in
           } ''
           cp ${cfg.serverPackage}/etc/worldserver.conf.dist $out
           substituteInPlace $out \
-            --replace 'DataDir = "."' 'LogsDir = "${cfg.world.dataDir}"' \
+            --replace 'DataDir = "."' 'DataDir = "${cfg.dataDir}"' \
             --replace 'LogsDir = ""' 'LogsDir = "${cfg.logDir}"' \
             --replace 'TempDir = ""' 'TempDir = "${cfg.tmpDir}"' \
             --replace \
-              'LoginDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_auth"' \
+              'LoginDatabaseInfo     = "127.0.0.1;3306;acore;acore;acore_auth"' \
               'LoginDatabaseInfo = "${authDatabaseInfo}"' \
             --replace \
-              'WorldDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_world"' \
+              'WorldDatabaseInfo     = "127.0.0.1;3306;acore;acore;acore_world"' \
               'WorldDatabaseInfo = "${databaseInfo cfg.world.database}"' \
             --replace \
               'CharacterDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_characters"' \
               'CharacterDatabaseInfo = "${databaseInfo cfg.world.charactersDatabase}"' \
-            --replace 'WorldServerPort = 8085' 'WorldServerPort = "${toString cfg.world.port}"' \
+            --replace 'WorldServerPort = 8085' 'WorldServerPort = ${toString cfg.world.port}' \
             --replace 'BindIP = "0.0.0.0"' 'BindIP = "${cfg.world.address}"'
         '';
         "azerothcore/dbimport.conf".source = pkgs.runCommand "dbimport.conf"
@@ -201,60 +188,62 @@ in
         '';
       };
 
-    # systemd.services.azerothcore-auth = {
-    #   description = "AzerothCore Auth Server";
-    #   after = [ "network-online.target" "mysql.service" ];
-    #   serviceConfig = {
-    #     User = "azerothcore";
-    #     Group = "azerothcore";
-    #     RuntimeDirectory = cfg.dataDir;
-    #     WorkingDirectory = cfg.dataDir;
-    #     Restart = "on-failure";
-    #     ExecStart = "${cfg.serverPackage}/bin/authserver -c /etc/azerothcore/authserver.conf";
-    #   };
-    # };
+    systemd.services.azerothcore-auth = {
+      description = "AzerothCore Auth Server";
+      after = [ "network-online.target" "mysql.service" ];
+      preStart = ''
+        rm "${cfg.dataDir}/sql"
+        ln -s "${cfg.serverPackage}/share/sql" "${cfg.dataDir}/sql"
+      '';
+      serviceConfig = {
+        Type = "simple";
+        User = "azerothcore";
+        Group = "azerothcore";
+        WorkingDirectory = "~";
+        Restart = "on-failure";
+        ExecStart = "${cfg.serverPackage}/bin/authserver -c /etc/azerothcore/authserver.conf";
+      };
+    };
     # systemd.services.azerothcore-world = {
     #   description = "AzerothCore World Server";
     #   after = [ "network-online.target" "mysql.service" "azerothcore-auth.service" ];
-    #   # preStart = ''
-    #   #   rm "${cfg.world.dataDir}"
-    #   #   ln -s "${cfg.clientDataPackage}" "${cfg.world.dataDir}"
-    #   # '';
+    #   preStart = ''
+    #     rm "${cfg.dataDir}/data"
+    #     ln -s "${lib.getOutput "out" cfg.clientDataPackage}" "${cfg.dataDir}/data"
+    #   '';
     #   serviceConfig = {
+    #     Type = "simple";
     #     User = "azerothcore";
     #     Group = "azerothcore";
-    #     RuntimeDirectory = cfg.dataDir;
-    #     WorkingDirectory = cfg.dataDir;
+    #     WorkingDirectory = "~";
     #     Restart = "on-failure";
     #     ExecStart = "${cfg.serverPackage}/bin/worldserver -c /etc/azerothcore/worldserver.conf";
     #   };
     # };
 
-    # systemd.targets.azerothcore = rec {
-    #   description = "AzerothCore";
-    #   wantedBy = [ "multi-user.target" ];
-    #   wants = [ "azerothcore-auth.service" "azerothcore-world.service" ];
-    #   after = wants;
-    # };
+    systemd.targets.azerothcore = rec {
+      description = "AzerothCore";
+      wantedBy = [ "multi-user.target" ];
+      wants = [ "azerothcore-auth.service" "azerothcore-world.service" ];
+      after = wants;
+    };
 
     services.mysql = {
       enable = true;
-      package = pkgs.mysql80;
-      initialDatabases = [
-        { name = cfg.auth.database; }
-        { name = cfg.world.database; }
-        { name = cfg.world.charactersDatabase; }
+      package = lib.mkDefault pkgs.mysql80;
+      ensureDatabases = [
+        cfg.auth.database
+        cfg.world.database
+        cfg.world.charactersDatabase
       ];
-      ensureUsers = [
-        {
-          name = "azerothcore";
-          ensurePermissions = {
-            "${cfg.auth.database}.*" = "ALL PRIVILEGES";
-            "${cfg.world.database}.*" = "ALL PRIVILEGES";
-            "${cfg.world.charactersDatabase}.*" = "ALL PRIVILEGES";
-          };
-        }
-      ];
+      ensureUsers = [{
+        name = cfg.database.user;
+        ensurePermissions = {
+          "${cfg.auth.database}.*" = "ALL PRIVILEGES";
+          "${cfg.world.database}.*" = "ALL PRIVILEGES";
+          "${cfg.world.charactersDatabase}.*" = "ALL PRIVILEGES";
+        };
+      }];
     };
   };
 }

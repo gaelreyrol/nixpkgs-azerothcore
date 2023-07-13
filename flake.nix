@@ -52,7 +52,9 @@
           pkgs = import nixpkgs {
             inherit system;
             config.allowUnfree = true;
-            overlays = [ self.overlays.default ];
+            overlays = [
+              self.overlays.default
+            ];
           };
         };
       });
